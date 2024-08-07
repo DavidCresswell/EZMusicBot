@@ -1,0 +1,8 @@
+services:
+  ezmusicbot:
+    # build: .
+    image: ghcr.io/davidcresswell/ezmusicbot:master
+    pull_policy: always
+    restart: unless-stopped
+    environment:
+      - DISCORD_TOKEN=...

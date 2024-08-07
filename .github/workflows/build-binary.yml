@@ -1,0 +1,57 @@
+name: Build Binaries
+
+on:
+  push:
+    branches: ['master']
+jobs:
+  build-linux-binary:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Build
+        run: |
+          npm install -d postject esbuild
+          npm run build
+          npx esbuild out/main.js --bundle --outfile=out/bundle.js --platform=node --external:ffmpeg-static
+          node --experimental-sea-config sea-config.json
+          curl -LO https://nodejs.org/download/release/latest-v20.x/node-v20.16.0-linux-x64.tar.xz
+          tar -xf node-v20.16.0-linux-x64.tar.xz
+          cp node-v20.16.0-linux-x64/bin/node out/ezmusicbot
+          npx postject out/ezmusicbot NODE_SEA_BLOB out/sea-prep.blob --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2
+      - name: Upload build output
+        uses: actions/upload-artifact@v4
+        with:
+          name: ezmusicbot
+          path: out/ezmusicbot
+  build-windows-binary:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+      attestations: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Build
+        run: |
+          npm install -d postject esbuild
+          npm run build
+          npx esbuild out/main.js --bundle --outfile=out/bundle.js --platform=node --external:ffmpeg-static
+          node --experimental-sea-config sea-config.json
+          node -e "require('fs').copyFileSync(process.execPath, 'out/ezmusicbot.exe')"
+          npx postject out/ezmusicbot.exe NODE_SEA_BLOB out/sea-prep.blob --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2
+      - name: Upload build output
+        uses: actions/upload-artifact@v2
+        with:
+          name: ezmusicbot.exe
+          path: out/ezmusicbot.exe

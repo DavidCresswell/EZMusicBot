@@ -1,0 +1,7 @@
+{
+    "main": "out/bundle.js",
+    "output": "out/sea-prep.blob",
+    "disableExperimentalSEAWarning": true,
+    "useSnapshot": false,
+    "useCodeCache": true
+}
