@@ -21,5 +21,8 @@ if (!token || token.length < 5) {
             console.error('Error updating:', e);
         });
     }, updateInterval * 1000);
-}
 
+    update().catch((e) => {
+        console.error('Error updating:', e);
+    });
+}

@@ -46,7 +46,7 @@ export default class Bot {
                         });
                         return;
                     }
-                    interaction.deferReply({
+                    await interaction.deferReply({
                         ephemeral: false
                     });
                     let guildId = vc.guildId;
@@ -58,9 +58,9 @@ export default class Bot {
                         botPlayer.ensureChannel(vc);
                     }
 
-                    let url = <string>interaction.options.get('url').value;
+                    let song = <string>interaction.options.get('song').value;
 
-                    await botPlayer.play(url, interaction);
+                    await botPlayer.play(song, interaction);
                     break;
                 }
             case 'skip':
@@ -90,12 +90,15 @@ export default class Bot {
                         });
                         return;
                     }
-                    await botPlayer.playNext();
-                    let nowPlaying = botPlayer.nowPlaying;
-                    if (nowPlaying) {
-                        await interaction.reply(`Now playing: ${nowPlaying.title}`);
+                    await interaction.deferReply({
+                        ephemeral: false
+                    });
+                    let next = botPlayer.skip();
+                    if (next) {
+                        let formattedDuration = new Date(next.durationSeconds).toISOString().substr(11, 8);
+                        await interaction.editReply(`Now playing: ${next.title} (${formattedDuration})`);
                     } else {
-                        await interaction.reply('Queue is now empty');
+                        await interaction.editReply('Nothing left in queue, stopping.');
                     }
                     break;
                 }

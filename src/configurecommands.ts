@@ -8,9 +8,9 @@ export async function configureCommands(clientId: string, token: string) {
             description: 'Play a song',
             options: [
                 {
-                    name: 'url',
+                    name: 'song',
                     type: 3,
-                    description: 'URL of the song to play',
+                    description: 'URL or name of the song to play',
                     required: true
                 }
             ]

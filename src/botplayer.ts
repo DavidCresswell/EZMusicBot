@@ -1,7 +1,7 @@
 import { AudioPlayer, createAudioResource, joinVoiceChannel, VoiceConnection } from "@discordjs/voice";
 import MusicItem from "./musicitem";
 import { CommandInteraction, TextBasedChannel, VoiceBasedChannel } from "discord.js";
-import { downloadStream, getJson } from "./download";
+import { DataResult, downloadStream, getJson, searchJson } from "./download";
 
 export class BotPlayer {
     queue: MusicItem[];
@@ -52,9 +52,22 @@ export class BotPlayer {
         }
     }
 
-    async play(url: string, interaction: CommandInteraction) {
+    async play(song: string, interaction: CommandInteraction) {
         this.textChannel = interaction.channel;
-        let json = await getJson(url);
+        let json: DataResult;
+        if (song.startsWith('http://') || song.startsWith('https://')) {
+            json = await getJson(song);
+        } else {
+            json = await searchJson(song);
+            if (json.success && !json.data) {
+                console.log('no results found for search:', song);
+                await interaction.editReply("No results found for search: " + song);
+                return;
+            }
+            if (json.data) {
+                song = json.data.webpage_url;
+            }
+        }
         if (json.error) {
             console.error('Error:', json.error);
             let trimmed = json.error.substring(0, 1950);
@@ -62,7 +75,7 @@ export class BotPlayer {
             return;
         }
         let musicItem : MusicItem = {
-            url: url,
+            url: song,
             title: json.data.title,
             durationSeconds: json.data.duration,
         };
@@ -84,8 +97,8 @@ export class BotPlayer {
 
     async playNext() {
         let item = this.queue.shift();
-        if (this.connection.state)
         if (!item) {
+            this.nowPlaying = null;
             console.log('Queue empty, disconnecting');
             this.connection.destroy();
             this.connection = null;
@@ -100,14 +113,14 @@ export class BotPlayer {
             this.player.play(streamRes);
         } catch (e) {
             console.error('Error playing:', e);
-            this.textChannel.send(`Error playing ${item.title}: ${e}`).catch(() => {});
+            //this.textChannel.send(`Error playing ${item.title}: ${e}`).catch(() => {});
             await this.playNext();
             return;
         }
         this.nowPlaying = item;
         let formattedDuration = new Date(item.durationSeconds * 1000).toISOString().substr(11, 8);
         console.log(`Now playing: ${item.title} (${formattedDuration})`);
-        this.textChannel.send(`Now playing: ${item.title} (${formattedDuration})`).catch(() => {});
+        //this.textChannel.send(`Now playing: ${item.title} (${formattedDuration})`).catch(() => {});
     }
 
     async ensureChannel(channel: VoiceBasedChannel) {
@@ -117,11 +130,14 @@ export class BotPlayer {
         }
     }
 
+    skip() {
+        let next = this.queue.length != 0 ? this.queue[0] : null;
+        this.player.stop(true);
+        return next;
+    }
+
     stop() {
         this.queue = [];
-        this.player.stop();
-        this.connection.destroy();
-        this.connection = null;
-        this.nowPlaying = null;
+        this.player.stop(true);
     }
 }

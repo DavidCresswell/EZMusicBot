@@ -6,10 +6,11 @@ WORKDIR /bot
 
 COPY package.json package-lock.json tsconfig.json ./
 
-RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp --create-dirs -o ~/bin/yt-dlp && \
-    chmod a+rx ~/bin/yt-dlp
+RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp --create-dirs -o /bin/yt-dlp && \
+    chmod a+rx /bin/yt-dlp
 
-RUN npm install -d @discordjs/opus ffmpeg-static sodium
+RUN apt-get update && apt-get install -y ffmpeg && apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN npm install -d @discordjs/opus sodium
 
 COPY src src
 
@@ -19,6 +20,5 @@ ENV DISCORD_TOKEN=
 ENV YTDL_NAME=yt-dlp
 ENV YTDL_UPDATE_COMMAND="yt-dlp -U"
 ENV YTDL_UPDATE_INTERVAL=86400
-ENV REMOVE_NON_MUSIC_PARTS=true
 
 CMD ["node", "out/main.js"]
