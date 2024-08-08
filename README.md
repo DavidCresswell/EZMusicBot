@@ -20,7 +20,7 @@ docker compose logs
 ```
 ### From source
 - Install node.js v20
-- Install ffmpeg
+- Install [ffmpeg](https://www.ffmpeg.org/download.html) and [yt-dlp](https://github.com/yt-dlp/yt-dlp/releases/latest)
 - Clone this repository
 - Set your DISCORD_TOKEN environment variable or create a .env file and set it there.
 - Run the following. If opus and sodium fail to install it will still work but use slightly slower fallbacks.
